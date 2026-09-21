@@ -16,6 +16,8 @@
 - Kurulum tanımı: `installer/QylentKutuphane.iss`.
 - Inno Setup 6.7.3 kurulu ve doğrulandı.
 - Üretilen kurulum: `artifacts/installer/Qylent-Kutuphane-Setup-1.0.0.exe` (21 Eylül 2026 üretimi, SHA-256 `DACFA38946B603C12BF5788C53D977C72C13483AA7C7D4D9A1CA21D200B199EA`).
+- GitHub deposu: `https://github.com/Qylent-Studio/Qylent-Kutuphane`; varsayılan dal `main`.
+- GitHub Release: `v1.0.0`; Setup EXE doğrudan Release varlığı olarak yayımlandı.
 - Performans doğrulaması: `scripts/test-performance.ps1`; 50.000 ve 250.000 katalog kaydı, sorgu başına 3 saniye üst sınırı.
 
 ## Veri konumu

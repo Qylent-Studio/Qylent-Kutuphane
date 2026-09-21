@@ -32,8 +32,11 @@
   - [x] Self-contained `win-x64` yayın tanımı ve doğrulanmış yayın çıktısı
   - [x] Inno Setup kurulum betiği
   - [x] Inno Setup 6.7.3 ile kurulum EXE derlemesi
+  - [x] Public GitHub deposu, kaliteli README ve `v1.0.0` Setup EXE Release yayını
   - [x] Mevcut Windows makinesinde sessiz kurulum ve kaldırma smoke testi
   - [x] 50.000/250.000 kayıt performans doğrulaması
+  - [ ] Uygulama açılışında ayarlanan moda göre görevli seçimi/PIN doğrulaması
+  - [ ] Ödünç, iade ve ayırtma işlemlerini giriş yapan görevliye bağlama
   - [ ] Temiz Windows 10 ve temiz Windows 11 kurulum/ilk açılış doğrulaması
 
 ## Plan kapsamı
@@ -47,5 +50,7 @@
 - Doğrulama çalıştırıcısı: 11 başarılı, 0 başarısız.
 - Performans: 50.000 kayıtta en yavaş sorgu 114 ms; 250.000 kayıtta 537 ms.
 - Kurulum EXE üretimi ile mevcut Windows 11 25H2 geliştirme makinesinde kurulum, ilk açılış ve kaldırma smoke testi başarılı.
+- GitHub `v1.0.0` Release içindeki Setup EXE boyutu ve SHA-256 özeti canlı olarak doğrulandı.
+- Görevli/PIN kayıt altyapısı vardır; görevli giriş ekranı, PIN doğrulaması ve aktif görevlinin dolaşım işlemlerine aktarılması henüz yoktur.
 - Temiz Windows 10/11 ortamı bu makinede bulunmadığı için ilgili kabul maddesi açık kaldı.
-- Tamamlanan aşama: 5/6 (Aşama 0-4). Aşama 5 yalnız temiz Windows 10/11 doğrulamasını bekliyor.
+- Tamamlanan aşama: 5/6 (Aşama 0-4). Aşama 5 görevli giriş akışı, işlemlerin aktif görevliye bağlanması ve temiz Windows 10/11 doğrulamasını bekliyor.

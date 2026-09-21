@@ -9,6 +9,9 @@
 
 ## Son tamamlanan paket
 
+- Proje 21 Eylül 2026'da `Qylent-Studio/Qylent-Kutuphane` adresinde herkese açık GitHub deposu olarak yayımlandı.
+- `v1.0.0` GitHub Release oluşturuldu; `Qylent-Kutuphane-Setup-1.0.0.exe` kurulum dosyası Release varlığı olarak yüklendi ve GitHub SHA-256 özeti yerel dosyayla eşleşti.
+- Türkçe README; kurulum, özellikler, güvenlik, sistem gereksinimleri, doğrulama durumu ve sık sorulan sorularla hazırlandı. Depo açıklaması ve arama konu etiketleri eklendi.
 - Inno Setup 6.7.3 ile `Qylent-Kutuphane-Setup-1.0.0.exe` 21 Eylül 2026'da yeniden üretildi.
 - Kurulum paketi mevcut Windows 11 25H2 (26200.9457) geliştirme makinesinde kullanıcı kapsamına sessizce kuruldu.
 - Yalıtılmış `%LocalAppData%` ile ilk kurulum penceresinin açık, yanıt verir ve `Qylent Kütüphane — İlk kurulum` başlıklı olduğu doğrulandı; ardından kurulum temizce kaldırıldı.
@@ -17,6 +20,9 @@
 
 ## Doğrulama
 
+- GitHub deposu: `https://github.com/Qylent-Studio/Qylent-Kutuphane` (`PUBLIC`, varsayılan dal `main`).
+- Release: `https://github.com/Qylent-Studio/Qylent-Kutuphane/releases/tag/v1.0.0` (yayımlanmış, taslak değil, ön sürüm değil).
+- Release varlığı: 52.665.821 bayt; GitHub özeti `sha256:dacfa38946b603c12bf5788c53d977c72c13483aa7c7d4d9a1ca21d200b199ea`.
 - Release `dotnet build`: 0 uyarı, 0 hata.
 - Konsol doğrulama paketi: 11/11 başarılı.
 - 50.000 kayıt: barkod 114 ms, kitap adı 40 ms, liste 16 ms.
@@ -27,4 +33,6 @@
 
 ## Sonraki adım
 
-Temiz Windows 10 ve Windows 11 sanal/fiziksel makinelerinde `docs/calistirma-test-derleme/README.md` içindeki kabul sırasıyla kurulum, ilk açılış ve temel dolaşım smoke testi yapılmalıdır. Ardından Aşama 5 tamamlanabilir; Aşama 6 kapsamı ancak kullanıcı tanımlarsa eklenir.
+Görevli modu altyapısında görevli adı ve PIN özeti saklanıyor; ancak uygulama açılışında görevli seçimi/PIN doğrulaması yoktur ve dolaşım işlemleri seçili görevliye bağlanmamaktadır. Kullanıcının isteğiyle bu eksik daha sonra ayrı, doğrulanabilir bir paket olarak tamamlanacaktır.
+
+Temiz Windows 10 ve Windows 11 sanal/fiziksel makinelerinde `docs/calistirma-test-derleme/README.md` içindeki kabul sırasıyla kurulum, ilk açılış ve temel dolaşım smoke testi yapılmalıdır. Aşama 5; görevli giriş akışı ile temiz Windows 10/11 doğrulaması tamamlandıktan sonra kapatılabilir. Aşama 6 kapsamı ancak kullanıcı tanımlarsa eklenir.
