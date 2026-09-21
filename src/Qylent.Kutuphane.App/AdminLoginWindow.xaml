@@ -1,0 +1,9 @@
+<Window x:Class="Qylent.Kutuphane.App.AdminLoginWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Yönetici girişi" Width="420" Height="270" ResizeMode="NoResize" WindowStartupLocation="CenterOwner" ShowInTaskbar="False">
+    <Grid Margin="28"><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+        <TextBlock Style="{StaticResource PageTitle}" FontSize="25" Text="Yönetici girişi" />
+        <TextBlock Grid.Row="1" Style="{StaticResource Label}" Text="Yönetici şifresi" />
+        <PasswordBox Grid.Row="2" x:Name="PasswordInput" AutomationProperties.Name="Yönetici şifresi" KeyDown="PasswordInput_KeyDown" />
+        <DockPanel Grid.Row="3" VerticalAlignment="Bottom"><Button DockPanel.Dock="Left" Click="ResetPassword_Click" Content="Şifremi unuttum" /><StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><Button IsCancel="True" Content="Vazgeç" Margin="0,0,10,0" /><Button Style="{StaticResource PrimaryButton}" Click="Login_Click" Content="Giriş yap" /></StackPanel></DockPanel>
+    </Grid>
+</Window>

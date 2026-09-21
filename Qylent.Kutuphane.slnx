@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Qylent.Kutuphane.App/Qylent.Kutuphane.App.csproj" />
+    <Project Path="src/Qylent.Kutuphane.Core/Qylent.Kutuphane.Core.csproj" />
+    <Project Path="src/Qylent.Kutuphane.Infrastructure/Qylent.Kutuphane.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Qylent.Kutuphane.Tests/Qylent.Kutuphane.Tests.csproj" />
+  </Folder>
+</Solution>
+

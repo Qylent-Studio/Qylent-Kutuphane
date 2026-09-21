@@ -1,0 +1,17 @@
+.tools/
+.hallmark/
+.vs/
+.idea/
+bin/
+obj/
+TestResults/
+artifacts/
+publish/
+*.user
+*.suo
+*.db
+*.db-shm
+*.db-wal
+*.qylibbackup
+*.xlsx
+!docs/**/*.xlsx
