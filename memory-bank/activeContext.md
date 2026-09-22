@@ -37,6 +37,7 @@
 
 - Proje 21 Eylül 2026'da `Qylent-Studio/Qylent-Kutuphane` adresinde herkese açık GitHub deposu olarak yayımlandı.
 - `v1.0.0` GitHub Release oluşturuldu; `Qylent-Kutuphane-Setup-1.0.0.exe` kurulum dosyası Release varlığı olarak yüklendi ve GitHub SHA-256 özeti yerel dosyayla eşleşti.
+- `v1.2.3` kaynak kodu ve README `main` dalına gönderildi; GitHub Release oluşturuldu. Release varlığının boyutu ve SHA-256 özeti yerel nihai Setup ile eşleşti. Sürüm notu Akıllı Uygulama Denetimi engelini ve nihai kurulum testi sınırını açıkça belirtiyor.
 - Türkçe README; kurulum, özellikler, güvenlik, sistem gereksinimleri, doğrulama durumu ve sık sorulan sorularla hazırlandı. Depo açıklaması ve arama konu etiketleri eklendi.
 - Inno Setup 6.7.3 ile `Qylent-Kutuphane-Setup-1.0.0.exe` 21 Eylül 2026'da yeniden üretildi.
 - Kurulum paketi mevcut Windows 11 25H2 (26200.9457) geliştirme makinesinde kullanıcı kapsamına sessizce kuruldu.
@@ -47,7 +48,7 @@
 ## Doğrulama
 
 - GitHub deposu: `https://github.com/Qylent-Studio/Qylent-Kutuphane` (`PUBLIC`, varsayılan dal `main`).
-- Release: `https://github.com/Qylent-Studio/Qylent-Kutuphane/releases/tag/v1.0.0` (yayımlanmış, taslak değil, ön sürüm değil).
+- Güncel Release: `https://github.com/Qylent-Studio/Qylent-Kutuphane/releases/tag/v1.2.3` (yayımlanmış, taslak değil, ön sürüm değil).
 - Release varlığı: 52.665.821 bayt; GitHub özeti `sha256:dacfa38946b603c12bf5788c53d977c72c13483aa7c7d4d9a1ca21d200b199ea`.
 - Release `dotnet build`: 0 uyarı, 0 hata.
 - Konsol doğrulama paketi: 17/17 başarılı.
@@ -65,6 +66,7 @@
 - PIN giriş penceresi düzeltmesinden sonra Release derleme 0 uyarı/0 hata ve doğrulama çalıştırıcısı 17/17 başarılıdır; PIN modu servis senaryosu ayrıca bu paket içinde geçmiştir. Derlenen uygulama gerçek kullanıcı profiliyle görevli girişine ulaştı ve pencere 460x440 olarak ölçüldü.
 - `v1.2.2` self-contained yayın ve Setup üretildi: 52.690.239 bayt, SHA-256 `A021436CAA0B46D8112C1CAF046973B4C0FDA089D9E4D1EF204B9808335084AC`. Release derleme 0 uyarı/0 hata; doğrulama 17/17 başarılı. Gerçek PIN ile girişten ana pencereye geçiş ve yeni Setup kurulumu henüz uçtan uca sınanmadı.
 - Nihai `v1.2.3` Setup: 52.702.059 bayt; SHA-256 `32714203C589B1D79B1894719075285537E01EC1042B9008C402B99AFF287457`. Release derleme 0 uyarı/0 hata, doğrulama 17/17 başarılı. İlk `v1.2.3` adayı `v1.0.0` üzerine veri koruyan yükseltme testinden geçmişti; son stil düzeltmesi sonrasındaki nihai Setup bu makinede Code Integrity 3077 ile engellendiği için nihai yükseltme testi tamamlanamadı.
+- GitHub Release varlığı `Qylent-Kutuphane-Setup-1.2.3.exe`: 52.702.059 bayt, `sha256:32714203c589b1d79b1894719075285537e01ec1042b9008c402b99aff287457`; yerel paketle eşleşti.
 - TestSprite 0.12.0 oturumu açık fakat proje listesi boş ve WPF masaüstü hedefi desteklenmiyor. Orca görsel otomasyon servisi bu oturumda başlamadı; açık Qylent oturumu tek örnek kilidi tuttuğu için yeni kurulu 1.2.3 ana ekranı ayrıca gözlemlenemedi.
 - Yer tutucu kimlikli MSIX, tam Release ve 17/17 doğrulama sonrasında Windows SDK MakeAppx 10.0.26100.8249 ile başarıyla oluşturuldu; SHA-256 `B181505510AB4549852F2F305E098C9331CBA90BAC46385535A0F0D16F1227FF`.
 - Bu makinede Hyper-V/Windows Sandbox, VirtualBox/VMware/QEMU veya hazır temiz Windows imajı bulunmadığı için temiz Windows 10/11 kabul testi yapılamadı.

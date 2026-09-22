@@ -17,9 +17,9 @@
 - Kurulum tanımı: `installer/QylentKutuphane.iss`.
 - Inno Setup 6.7.3 kurulu ve doğrulandı.
 - Yayımlanmış kurulum: `v1.0.0`, SHA-256 `DACFA38946B603C12BF5788C53D977C72C13483AA7C7D4D9A1CA21D200B199EA`.
-- Yerel güncel kurulum adayı: `artifacts/installer/Qylent-Kutuphane-Setup-1.2.3.exe`, SHA-256 `32714203C589B1D79B1894719075285537E01EC1042B9008C402B99AFF287457`; nihai paket bu makinede Akıllı Uygulama Denetimi tarafından engellendi, henüz GitHub Release olarak yayımlanmadı.
+- Yayımlanan güncel kurulum: `artifacts/installer/Qylent-Kutuphane-Setup-1.2.3.exe`, SHA-256 `32714203C589B1D79B1894719075285537E01EC1042B9008C402B99AFF287457`; nihai paket bu makinede Akıllı Uygulama Denetimi tarafından engellendi, GitHub Release varlığının özeti yerel dosyayla eşleşti.
 - GitHub deposu: `https://github.com/Qylent-Studio/Qylent-Kutuphane`; varsayılan dal `main`.
-- GitHub Release: `v1.0.0`; Setup EXE doğrudan Release varlığı olarak yayımlandı.
+- GitHub Release: `v1.2.3`; Setup EXE doğrudan Release varlığı olarak yayımlandı.
 - Performans doğrulaması: `scripts/test-performance.ps1`; 50.000 ve 250.000 katalog kaydı, sorgu başına 3 saniye üst sınırı.
 - Güncel doğrulama çalıştırıcısı: 17 senaryo; dört kurum profili, veri koruyan profil geçişi ve tema kalıcılığı dahildir.
 - Yerinde yükseltme doğrulaması: `scripts/test-upgrade.ps1`; gerçek `v1.0.0` ve `v1.2.0` Setup paketleriyle yalıtılmış yükseltme doğrulandı. Gerçek kullanıcı kurulumunda `v1.2.0` → `v1.2.1` sırasında veritabanı, anahtarlar ve yedek dosyası özetleri korundu.

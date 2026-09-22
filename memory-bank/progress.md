@@ -95,5 +95,6 @@
 - Görevli PIN giriş penceresindeki kırpılma giderildi; pencere içeriğe göre yükselir, giriş düğmesi tamamen görünür ve PIN alanı açılışta odağı alır. Release derleme 0 uyarı/0 hata, doğrulama paketi 17/17 başarılıdır.
 - `v1.2.2` girişten sonra ana pencere açılmadan uygulamanın kapanmasına neden olan WPF yaşam döngüsü düzeltildi; yeni Setup üretildi. Gerçek PIN ve kurulu paketle uçtan uca giriş doğrulaması bekliyor.
 - `v1.2.3` koyu tema metin ve tablo renkleri ortak dinamik palete bağlandı; yeni Setup üretildi. İlk aday `v1.0.0` üzerine veri koruyan yükseltme testinden geçti; nihai paket bu makinede Akıllı Uygulama Denetimi tarafından engellendiği için kurulum/yükseltme doğrulaması açık kaldı. README'de engel ve güvenli dağıtım yolu açıklandı.
+- `v1.2.3` kaynak kodu, README ve Setup GitHub'da yayımlandı; Release varlığının SHA-256 özeti yerel nihai paketle eşleşti.
 - Yer tutucu kimlikli `v1.2.0.0` MSIX, MakeAppx doğrulamasından geçerek üretildi; nihai Store imzası ve sertifikasyonu bekleniyor.
 - Tamamlanan aşama: 11/12 (Aşama 0-4 ve 6-11). Aşama 5'te temiz Windows 10/11 ortam doğrulaması ile Partner Center kimliği üzerinden Store sertifikasyonu açıktır.
