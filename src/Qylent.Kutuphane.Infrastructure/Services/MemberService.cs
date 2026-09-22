@@ -11,6 +11,19 @@ public sealed class MemberService(
     IDbContextFactory<LibraryDbContext> contextFactory,
     ISecurityService securityService) : IMemberService
 {
+    public async Task<MemberDetails?> GetAsync(Guid memberId, CancellationToken cancellationToken = default)
+    {
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var member = await db.Members.AsNoTracking().Include(x => x.CustomFieldValues)
+            .SingleOrDefaultAsync(x => x.Id == memberId, cancellationToken);
+        if (member is null) return null;
+        var sensitiveFields = await db.MemberFieldDefinitions.AsNoTracking().Where(x => x.IsSensitive)
+            .Select(x => x.Id).ToHashSetAsync(cancellationToken);
+        return new MemberDetails(member.Id, member.MemberNumber, member.FullName, member.MemberType, member.ClassOrUnit,
+            Decrypt(member.EncryptedPhone), Decrypt(member.EncryptedEmail), Decrypt(member.EncryptedAddress),
+            member.CustomFieldValues.ToDictionary(x => x.DefinitionId, x => DecryptField(x.Value, sensitiveFields.Contains(x.DefinitionId))), member.IsArchived);
+    }
+
     public async Task<OperationResult<Member>> AddAsync(MemberInput input, string actor, CancellationToken cancellationToken = default)
     {
         var memberNumber = input.MemberNumber.Trim();
@@ -124,6 +137,9 @@ public sealed class MemberService(
     }
 
     private string? Encrypt(string? value) => string.IsNullOrWhiteSpace(value) ? null : securityService.EncryptSensitive(value.Trim());
+    private string? Decrypt(string? value) => string.IsNullOrWhiteSpace(value) ? null : securityService.DecryptSensitive(value);
+    private string? DecryptField(string? value, bool isSensitive)
+        => string.IsNullOrWhiteSpace(value) || !isSensitive ? value : securityService.DecryptSensitive(value);
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     private static OperationResult ValidateFieldValue(MemberFieldDefinition definition, string? value)

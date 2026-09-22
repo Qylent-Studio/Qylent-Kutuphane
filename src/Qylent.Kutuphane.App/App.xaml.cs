@@ -3,6 +3,7 @@ using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Qylent.Kutuphane.App.ViewModels;
+using Qylent.Kutuphane.App.Ui;
 using Qylent.Kutuphane.Core.Contracts;
 using Qylent.Kutuphane.Infrastructure;
 using Qylent.Kutuphane.Infrastructure.Persistence;
@@ -18,6 +19,7 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ShutdownMode = ShutdownMode.OnExplicitShutdown;
         _singleInstance = new Mutex(true, "Qylent.Kutuphane.SingleInstance", out var createdNew);
         if (!createdNew)
         {
@@ -31,8 +33,10 @@ public partial class App : Application
             {
                 services.AddQylentKutuphaneInfrastructure();
                 services.AddSingleton<MainViewModel>();
+                services.AddSingleton<IThemeService, ThemeService>();
                 services.AddSingleton<MainWindow>();
                 services.AddTransient<SetupWindow>();
+                services.AddTransient<OperatorLoginWindow>();
             })
             .Build();
         await _host.StartAsync();
@@ -42,8 +46,14 @@ public partial class App : Application
             var setup = _host.Services.GetRequiredService<SetupWindow>();
             if (setup.ShowDialog() != true) { Shutdown(); return; }
         }
+        var profile = await _host.Services.GetRequiredService<IAdministrationService>().GetLibraryProfileAsync();
+        _host.Services.GetRequiredService<IThemeService>().Apply(profile?.ThemePreference ?? Core.Domain.ThemePreference.System);
+        var operatorLogin = _host.Services.GetRequiredService<OperatorLoginWindow>();
+        if (operatorLogin.ShowDialog() != true) { Shutdown(); return; }
         await _host.Services.GetRequiredService<AutomaticBackupCoordinator>().RunIfDueAsync();
-        _host.Services.GetRequiredService<MainWindow>().Show();
+        MainWindow = _host.Services.GetRequiredService<MainWindow>();
+        MainWindow.Show();
+        ShutdownMode = ShutdownMode.OnMainWindowClose;
     }
 
     protected override async void OnExit(ExitEventArgs e)

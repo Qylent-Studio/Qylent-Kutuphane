@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Qylent Kütüphane uygulama simgesi</title>
+  <rect width="512" height="512" rx="104" fill="#2457D6"/>
+  <path d="M112 126h116c28 0 50 10 64 30 14-20 36-30 64-30h44v250h-76c-23 0-40 8-52 25-12-17-29-25-52-25H112V126zm54 54v142h60c17 0 31 4 43 11V198c-10-12-24-18-43-18h-60zm180 0c-19 0-33 6-43 18v135c12-7 26-11 43-11h0V180z" fill="#F9FBFF"/>
+  <path d="M250 126h44v276h-44z" fill="#173FAD" opacity=".28"/>
+</svg>

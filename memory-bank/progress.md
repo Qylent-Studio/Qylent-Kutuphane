@@ -35,14 +35,46 @@
   - [x] Public GitHub deposu, kaliteli README ve `v1.0.0` Setup EXE Release yayını
   - [x] Mevcut Windows makinesinde sessiz kurulum ve kaldırma smoke testi
   - [x] 50.000/250.000 kayıt performans doğrulaması
-  - [ ] Uygulama açılışında ayarlanan moda göre görevli seçimi/PIN doğrulaması
-  - [ ] Ödünç, iade ve ayırtma işlemlerini giriş yapan görevliye bağlama
+  - [x] Microsoft Store için MSIX manifesti, görselleri ve tekrarlanabilir paketleme betiği
+  - [ ] Partner Center kimliğiyle nihai MSIX üretimi ve Store sertifikasyonu
   - [ ] Temiz Windows 10 ve temiz Windows 11 kurulum/ilk açılış doğrulaması
+- [x] Aşama 6: Görevli girişi ve işlem sahipliği
+  - [x] Uygulama açılışında ayarlanan moda göre görevli seçimi/PIN doğrulaması
+  - [x] Ödünç, iade ve ayırtma işlemlerini giriş yapan görevliye bağlama
+  - [x] Uzatma işlemini giriş yapan görevliye bağlama
+  - [x] Ortak görevli, isim seçimi ve PIN modlarını doğrulama
+- [x] Aşama 7: Kitap yönetimi ve atomik kayıt
+  - [x] Kitap yönetimine kendi arama/listeleme/seçme ve erişilebilir düzenleme/arşivleme/silme akışını ekleme
+  - [x] Kitap başlığı ile ilk kopya/barkod eklemeyi atomik yapma; hata halinde kısmi kitap kaydı bırakmama
+  - [x] Zorunlu barkod bilgisini arayüzde açıkça gösterme ve doğrulama
+  - [x] Kitap ekleme/düzenleme/arşivleme/silme senaryolarını doğrulama
+- [x] Aşama 8: Üye ve yönetim kayıtlarında tam CRUD
+  - [x] Üye yönetimine kendi arama/listeleme/seçme ve erişilebilir düzenleme/arşivleme/silme akışını ekleme
+  - [x] Kurallar için düzenleme, etkinleştirme/devre dışı bırakma ve uygun silme akışını ekleme
+  - [x] Görevliler için düzenleme, etkinleştirme/devre dışı bırakma ve uygun silme akışını ekleme
+  - [x] Özel üye alanları için düzenleme, etkinleştirme/devre dışı bırakma ve uygun silme akışını ekleme
+  - [x] Yönetim CRUD senaryolarını doğrulama
+- [x] Aşama 9: Veri koruyan sürüm yükseltme
+  - [x] Setup mevcut eski sürümü algıladığında kullanıcı verilerini koruyan yerinde yükseltme yapıyor; sıfır kurulum yapmıyor
+  - [x] `v1.0.0` sürümünden `v1.1.0` sürümüne yükseltmede uygulama dosyasının değiştiği ve veritabanı/ayar/yedeklerin korunduğu doğrulandı
+- [x] Aşama 10: Kurum türüne duyarlı profil davranışı
+  - [x] Okul, halk kütüphanesi, özel kurum ve genel profillerinin kullanıcıya açık farklarını netleştirme
+  - [x] İlk kurulumda seçilen türe uygun hazır alanları ve etiketleri gösterme
+  - [x] Ayarlar'dan kurum türü değiştirildiğinde alanları ve arayüzü veri kaybetmeden yeni türe uyarlama
+  - [x] `Sınıf / birim` ile hazır `Sınıf` veya `Birim` alanlarının tekrarını kaldırma
+  - [x] Dört kurum türünün ilk kurulum ve sonradan tür değiştirme senaryolarını doğrulama
+- [x] Aşama 11: Arayüz, tema ve ikon sistemi
+  - [x] Ana gezinme ve yönetim sekmelerini anlaşılır gruplar, kısa adlar ve belirgin seçili durumlarla yeniden düzenleme
+  - [x] Sekme, düğme ve diğer etkileşimli öğelerde hover, klavye odağı, basılı, devre dışı, hata ve başarı durumlarını tutarlı gösterme
+  - [x] Açık, koyu ve Windows sistem temasını izleyen seçenekleri ortak WPF tasarım kaynaklarıyla uygulama
+  - [x] Tema tercihini kalıcı saklama ve uygulama açılışında doğru temayı yükleme
+  - [x] Eylemlere tutarlı vektör ikonlar ekleme; belirsiz yalnız-ikon kontrollerinde metin veya erişilebilir açıklama sağlama
+  - [x] Açık/koyu temada kontrastı, klavye gezinmesini, odak göstergelerini ve PerMonitorV2 ile yüzde 100/125/150 Windows ölçek desteğini doğrulama
 
 ## Plan kapsamı
 
-- Tanımlı aşamalar 0-5 arasındadır; toplam 6 aşama vardır.
-- Aşama 6 için henüz kapsam tanımlanmamıştır.
+- Tanımlı aşamalar 0-11 arasındadır; toplam 12 aşama vardır.
+- Yeni işler Aşama 6-11 olarak birbirinden ayrılmıştır; her aşama tamamlandığında ayrıca doğrulanacaktır.
 
 ## Son doğrulama
 
@@ -51,6 +83,17 @@
 - Performans: 50.000 kayıtta en yavaş sorgu 114 ms; 250.000 kayıtta 537 ms.
 - Kurulum EXE üretimi ile mevcut Windows 11 25H2 geliştirme makinesinde kurulum, ilk açılış ve kaldırma smoke testi başarılı.
 - GitHub `v1.0.0` Release içindeki Setup EXE boyutu ve SHA-256 özeti canlı olarak doğrulandı.
-- Görevli/PIN kayıt altyapısı vardır; görevli giriş ekranı, PIN doğrulaması ve aktif görevlinin dolaşım işlemlerine aktarılması henüz yoktur.
+- Görevli girişi ortak, isim seçimi ve PIN modlarında çalışır; ödünç, iade, uzatma ve ayırtma kayıtları aktif görevliye bağlanır.
+- Kitap yönetimi kendi arama/listeleme/seçme akışına sahiptir; düzenleme, arşivleme ve uygun kalıcı silme işlemleri aynı sekmeden erişilebilir.
+- Kitap başlığı ile ilk kopya atomik kaydedilir; eksik veya yinelenen barkodda kısmi kitap kaydı bırakılmaz.
+- `v1.0.0` Setup üzerine `v1.1.0` Setup yerinde kuruldu; önceki kurulum dizini kullanıldı, uygulama dosyası güncellendi ve veritabanı/ayar/yedek içerik özetleri değişmedi.
+- Kurum türü ilk kurulumda ve sonradan değiştirildiğinde aynı profil kurallarını uygular; mevcut üye verileri korunur.
+- Açık/koyu/sistem teması, seçili gezinme, klavye odağı ve metinle desteklenen vektör ikonlar uygulanmıştır.
 - Temiz Windows 10/11 ortamı bu makinede bulunmadığı için ilgili kabul maddesi açık kaldı.
-- Tamamlanan aşama: 5/6 (Aşama 0-4). Aşama 5 görevli giriş akışı, işlemlerin aktif görevliye bağlanması ve temiz Windows 10/11 doğrulamasını bekliyor.
+- Release derleme 0 uyarı/0 hata; doğrulama çalıştırıcısı 17/17 başarılıdır.
+- `v1.2.1` tema açılış çökmesi düzeltildi; kurulu uygulama mevcut veritabanıyla görevli girişine ulaştı ve kullanıcı verisi dosyalarının özetleri yerinde yükseltmede korundu.
+- Görevli PIN giriş penceresindeki kırpılma giderildi; pencere içeriğe göre yükselir, giriş düğmesi tamamen görünür ve PIN alanı açılışta odağı alır. Release derleme 0 uyarı/0 hata, doğrulama paketi 17/17 başarılıdır.
+- `v1.2.2` girişten sonra ana pencere açılmadan uygulamanın kapanmasına neden olan WPF yaşam döngüsü düzeltildi; yeni Setup üretildi. Gerçek PIN ve kurulu paketle uçtan uca giriş doğrulaması bekliyor.
+- `v1.2.3` koyu tema metin ve tablo renkleri ortak dinamik palete bağlandı; yeni Setup üretildi. İlk aday `v1.0.0` üzerine veri koruyan yükseltme testinden geçti; nihai paket bu makinede Akıllı Uygulama Denetimi tarafından engellendiği için kurulum/yükseltme doğrulaması açık kaldı. README'de engel ve güvenli dağıtım yolu açıklandı.
+- Yer tutucu kimlikli `v1.2.0.0` MSIX, MakeAppx doğrulamasından geçerek üretildi; nihai Store imzası ve sertifikasyonu bekleniyor.
+- Tamamlanan aşama: 11/12 (Aşama 0-4 ve 6-11). Aşama 5'te temiz Windows 10/11 ortam doğrulaması ile Partner Center kimliği üzerinden Store sertifikasyonu açıktır.

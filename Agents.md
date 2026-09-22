@@ -85,6 +85,7 @@ REMEMBER: After every memory reset, I begin completely fresh. The Memory Bank is
 7: Eğer kullanıcı sana başta Github ile düzenli git der ise Bunu memorybanke kaydet ve kullanıcı her istediiğinde Githuba pushla (AMA .env veya API Vs. gibi önemli şeyleri pushlama dikkat et) Github cli kullanabilirsin
 8: Eğer gelecekte yapılack bir iş varsa ona göre planla Örn: Kullanıcı şuan tasarıma özenmiyelim sonra ben sana örnek tasarımları vs. vericeğim dediğinde tasarım için planla ve ilk yaptığın tasarımı sonra değiştirile bilir yap (yani herşeyi ona bağlamaki değiştiridiğimizde sorun olmasın)
 9:Her işten sonra memorybanki güncelle (gerekli ise)ama BOZMA!!
+10:testsprite cli ile test et kota dolmadıysa.
 
 
 

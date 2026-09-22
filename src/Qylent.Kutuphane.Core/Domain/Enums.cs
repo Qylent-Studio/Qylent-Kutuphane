@@ -1,6 +1,7 @@
 namespace Qylent.Kutuphane.Core.Domain;
 
 public enum LibraryType { School, Public, PrivateInstitution, General }
+public enum ThemePreference { Light, Dark, System }
 public enum OperatorMode { Shared, NameSelection, Pin }
 public enum BookCopyStatus { Available, Loaned, Reserved, Lost, Maintenance, Archived }
 public enum LoanStatus { Active, Returned, Lost }
@@ -14,5 +15,6 @@ public enum ActivityType
     Loaned, Returned, Renewed, Reserved, ReservationCancelled,
     RuleCreated, OperatorCreated, MemberFieldCreated,
     ReportExported, BackupCreated, BackupRestored, AdminLogin, AdminPasswordReset,
-    SettingsUpdated, ReportPresetSaved, ReportPresetDeleted
+    SettingsUpdated, ReportPresetSaved, ReportPresetDeleted,
+    RuleUpdated, RuleDeleted, OperatorUpdated, OperatorDeleted, MemberFieldUpdated, MemberFieldDeleted
 }

@@ -15,6 +15,8 @@ Qylent Kütüphane; okul, halk ve kurum kütüphanelerinin kitap, fiziksel kopya
 - Kitap başlıkları ve fiziksel kopyalar için ayrı envanter yönetimi
 - Kitap adı, yazar, ISBN ve barkod ile hızlı arama
 - Üye kaydı ve kuruma göre özelleştirilebilir üye alanları
+- Veri kaybetmeden okul, halk, özel kurum ve genel profil geçişi
+- Kalıcı açık, koyu veya Windows sistem teması
 - Barkodla ödünç verme, iade, uzatma ve gecikme takibi
 - FIFO sırasına göre ayırtma yönetimi
 - Yönetici korumalı ayarlar, işlem günlüğü ve güvenlik alanı
@@ -25,24 +27,29 @@ Qylent Kütüphane; okul, halk ve kurum kütüphanelerinin kitap, fiziksel kopya
 ## Kurulum
 
 1. [Releases](https://github.com/Qylent-Studio/Qylent-Kutuphane/releases/latest) sayfasını açın.
-2. `Qylent-Kutuphane-Setup-1.0.0.exe` dosyasını indirin.
+2. En güncel `Qylent-Kutuphane-Setup-1.2.3.exe` dosyasını indirin.
 3. Kurulum sihirbazını tamamlayın ve Başlat menüsünden **Qylent Kütüphane** uygulamasını açın.
 4. İlk açılışta kurum profilini ve yönetici hesabını oluşturun.
 
 Uygulama `win-x64` için self-contained yayımlanır; son kullanıcının ayrıca .NET kurmasına gerek yoktur.
 
+### Windows Akıllı Uygulama Denetimi
+
+Setup EXE henüz güvenilir bir sertifika yetkilisinden alınmış kod imzası taşımadığı için Windows 11 **Akıllı Uygulama Denetimi** kurulumu engelleyebilir. Microsoft'un [açıklamasına](https://learn.microsoft.com/en-us/windows/apps/develop/smart-app-control/overview) göre bilinmeyen ve imzasız uygulamalar varsayılan olarak engellenebilir. Dosyanın bütünlüğünü doğrulamak bu engeli otomatik olarak kaldırmaz.
+
+Nihai `v1.2.3` Setup dosyasının geliştirme makinesindeki kurulumu bu ilke tarafından engellendi. Bu nedenle bu dosyanın kurulum/yükseltme testi tamamlanmadı; [sürüm notundaki doğrulama sınırlarını](docs/release-notes/v1.2.3.md) göz önünde bulundurun.
+
+- Akıllı Uygulama Denetimi'ni kapatmanızı önermiyoruz.
+- Kurulum dosyasını yalnızca bu deponun resmi [Releases](https://github.com/Qylent-Studio/Qylent-Kutuphane/releases/latest) sayfasından indirin.
+- Dosyayı aşağıdaki SHA-256 yöntemiyle doğrulayın.
+- Kalıcı çözüm kod imzalı paket veya Microsoft Store dağıtımıdır; Store paketi hazırlığı sürmektedir.
+
 ### Dosya bütünlüğü
 
-`v1.0.0` kurulum dosyasının SHA-256 özeti:
-
-```text
-DACFA38946B603C12BF5788C53D977C72C13483AA7C7D4D9A1CA21D200B199EA
-```
-
-PowerShell ile kontrol:
+`v1.2.3` kurulum dosyasının SHA-256 özeti: `32714203C589B1D79B1894719075285537E01EC1042B9008C402B99AFF287457`. PowerShell ile kontrol:
 
 ```powershell
-Get-FileHash .\Qylent-Kutuphane-Setup-1.0.0.exe -Algorithm SHA256
+Get-FileHash .\Qylent-Kutuphane-Setup-1.2.3.exe -Algorithm SHA256
 ```
 
 ## Gizlilik ve güvenlik
@@ -86,7 +93,7 @@ Derleme, test, performans ve kurulum paketi üretme adımları için [çalışt�
 ## Doğrulama durumu
 
 - Release derleme: **0 uyarı, 0 hata**
-- Otomatik doğrulama: **11/11 başarılı**
+- Otomatik doğrulama: **17/17 başarılı**
 - 50.000 ve 250.000 kayıtlı performans senaryoları: **başarılı**
 - Mevcut Windows 11 geliştirme makinesinde kurulum, ilk açılış ve kaldırma testi: **başarılı**
 - Ayrı, temiz Windows 10 ve Windows 11 makinelerinde kabul testi: **henüz tamamlanmadı**
@@ -99,7 +106,7 @@ Evet. Uygulama, veritabanı ve yedekleme işlevleri yerel çalışır; bulut hes
 
 ### Birden fazla bilgisayar arasında eşitleme yapar mı?
 
-Hayır. `v1.0.0` tek Windows bilgisayarında çevrimdışı kullanım için tasarlanmıştır.
+Hayır. Uygulama tek Windows bilgisayarında çevrimdışı kullanım için tasarlanmıştır.
 
 ### Barkod okuyucu destekleniyor mu?
 

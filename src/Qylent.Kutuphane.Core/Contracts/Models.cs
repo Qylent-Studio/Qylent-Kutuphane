@@ -26,7 +26,9 @@ public sealed record SetupRequest(
     int DefaultMaxRenewals,
     string BackupDirectory,
     string AdminPassword,
-    IReadOnlyList<SecurityQuestionInput> SecurityQuestions);
+    IReadOnlyList<SecurityQuestionInput> SecurityQuestions,
+    string? InitialOperatorName = null,
+    string? InitialOperatorPin = null);
 
 public sealed record MemberInput(
     string MemberNumber,
@@ -39,6 +41,17 @@ public sealed record MemberInput(
     IReadOnlyDictionary<Guid, string?>? CustomFields = null);
 
 public sealed record MemberSummary(Guid Id, string MemberNumber, string FullName, string MemberType, string? ClassOrUnit, bool IsBlocked, bool IsArchived);
+public sealed record MemberDetails(
+    Guid Id,
+    string MemberNumber,
+    string FullName,
+    string MemberType,
+    string? ClassOrUnit,
+    string? Phone,
+    string? Email,
+    string? Address,
+    IReadOnlyDictionary<Guid, string?> CustomFields,
+    bool IsArchived);
 
 public sealed record BookTitleInput(
     string Title,
@@ -51,7 +64,7 @@ public sealed record BookTitleInput(
     string? Description);
 
 public sealed record BookCopyInput(Guid BookTitleId, string Barcode, string? ShelfLocation);
-public sealed record BookSearchResult(Guid BookTitleId, Guid? BookCopyId, string Title, string Authors, string? Isbn, string? Barcode, string? ShelfLocation, BookCopyStatus? Status);
+public sealed record BookSearchResult(Guid BookTitleId, Guid? BookCopyId, string Title, string Authors, string? Isbn, string? Barcode, string? ShelfLocation, BookCopyStatus? Status, string? Category = null, bool IsTitleArchived = false);
 
 public sealed record CheckoutRequest(string MemberNumber, string Barcode, Guid? OperatorId = null);
 public sealed record ReturnRequest(string Barcode, Guid? OperatorId = null);
@@ -74,6 +87,10 @@ public sealed record BackupRequest(string OutputPath, string Password, bool IsAu
 public sealed record RestoreRequest(string BackupPath, string Password);
 public sealed record LoanRuleInput(string Name, string? MemberType, string? BookCategory, int LoanDays, int MaxActiveLoans, int MaxRenewals, int Priority);
 public sealed record OperatorInput(string Name, string? Pin);
+public sealed record OperatorChoice(Guid Id, string Name, bool HasPin);
+public sealed record OperatorLoginState(OperatorMode Mode, IReadOnlyList<OperatorChoice> Operators);
+public sealed record OperatorSession(Guid? OperatorId, string DisplayName, OperatorMode Mode);
+public sealed record BookCreationResult(Guid BookTitleId, Guid BookCopyId);
 public sealed record MemberFieldInput(string Name, MemberFieldType FieldType, bool IsRequired, bool IsSensitive, string? ChoiceOptions);
 public sealed record AuditSummary(DateTimeOffset OccurredAtUtc, string Activity, string Actor, string Entity, string? Description);
 public sealed record LibrarySettingsInput(
@@ -84,7 +101,8 @@ public sealed record LibrarySettingsInput(
     int DefaultLoanDays,
     int DefaultMaxActiveLoans,
     int DefaultMaxRenewals,
-    string BackupDirectory);
+    string BackupDirectory,
+    ThemePreference ThemePreference = ThemePreference.System);
 public sealed record ReportPresetInput(
     Guid? Id,
     string Name,

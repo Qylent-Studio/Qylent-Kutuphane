@@ -8,19 +8,45 @@ namespace Qylent.Kutuphane.Infrastructure.Services;
 
 public sealed class CatalogService(IDbContextFactory<LibraryDbContext> contextFactory) : ICatalogService
 {
+    public async Task<OperationResult<BookCreationResult>> AddTitleWithFirstCopyAsync(BookTitleInput input, string barcode, string? shelfLocation, string actor, CancellationToken cancellationToken = default)
+    {
+        var validation = ValidateTitle(input);
+        if (validation is not null) return OperationResult<BookCreationResult>.Fail(validation);
+        barcode = barcode.Trim();
+        if (barcode.Length < 2) return OperationResult<BookCreationResult>.Fail("Barkod veya demirbaş kodu zorunludur.");
+
+        await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        if (await db.BookCopies.AnyAsync(x => x.Barcode == barcode, cancellationToken))
+            return OperationResult<BookCreationResult>.Fail("Bu barkod veya demirbaş kodu zaten kullanılıyor.");
+
+        var title = CreateTitle(input);
+        var copy = new BookCopy { BookTitleId = title.Id, Barcode = barcode, ShelfLocation = Clean(shelfLocation) };
+        db.BookTitles.Add(title);
+        db.BookCopies.Add(copy);
+        AddAudit(db, ActivityType.BookCreated, actor, nameof(BookTitle), title.Id,
+            new { title.Title, title.Authors, title.Isbn, title.Category });
+        AddAudit(db, ActivityType.CopyCreated, actor, nameof(BookCopy), copy.Id,
+            new { copy.BookTitleId, copy.Barcode, copy.ShelfLocation });
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return OperationResult<BookCreationResult>.Ok(new(title.Id, copy.Id), "Kitap ve ilk kopyası eklendi.");
+        }
+        catch (DbUpdateException)
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            return OperationResult<BookCreationResult>.Fail("Kitap kaydedilemedi. Barkodun benzersiz olduğunu kontrol edin.");
+        }
+    }
+
     public async Task<OperationResult<BookTitle>> AddTitleAsync(BookTitleInput input, string actor, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(input.Title)) return OperationResult<BookTitle>.Fail("Kitap adı zorunludur.");
-        if (string.IsNullOrWhiteSpace(input.Authors)) return OperationResult<BookTitle>.Fail("Yazar bilgisi zorunludur.");
-        if (input.PublicationYear is < 0 or > 3000) return OperationResult<BookTitle>.Fail("Basım yılı geçerli değil.");
+        var validation = ValidateTitle(input);
+        if (validation is not null) return OperationResult<BookTitle>.Fail(validation);
         await using var db = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var title = new BookTitle
-        {
-            Title = input.Title.Trim(), Authors = input.Authors.Trim(), Isbn = Clean(input.Isbn),
-            Publisher = Clean(input.Publisher), PublicationYear = input.PublicationYear,
-            Category = Clean(input.Category), Language = string.IsNullOrWhiteSpace(input.Language) ? "Türkçe" : input.Language.Trim(),
-            Description = Clean(input.Description)
-        };
+        var title = CreateTitle(input);
         db.BookTitles.Add(title);
         AddAudit(db, ActivityType.BookCreated, actor, nameof(BookTitle), title.Id, title);
         await db.SaveChangesAsync(cancellationToken);
@@ -83,9 +109,9 @@ public sealed class CatalogService(IDbContextFactory<LibraryDbContext> contextFa
                  (x.Isbn != null && x.Isbn.Contains(query)) || x.Copies.Any(c => c.Barcode.Contains(query))))
             .OrderBy(x => x.Title).Take(100).ToListAsync(cancellationToken);
         return titles.SelectMany(title => title.Copies.Count == 0
-                ? [new BookSearchResult(title.Id, null, title.Title, title.Authors, title.Isbn, null, null, null)]
+                ? [new BookSearchResult(title.Id, null, title.Title, title.Authors, title.Isbn, null, null, null, title.Category, title.IsArchived)]
                 : title.Copies.Where(x => includeArchived || x.Status != BookCopyStatus.Archived)
-                    .Select(copy => new BookSearchResult(title.Id, copy.Id, title.Title, title.Authors, title.Isbn, copy.Barcode, copy.ShelfLocation, copy.Status)))
+                    .Select(copy => new BookSearchResult(title.Id, copy.Id, title.Title, title.Authors, title.Isbn, copy.Barcode, copy.ShelfLocation, copy.Status, title.Category, title.IsArchived)))
             .Take(250).ToList();
     }
 
@@ -148,6 +174,22 @@ public sealed class CatalogService(IDbContextFactory<LibraryDbContext> contextFa
             EntityType = entityType, EntityId = entityId, OperatorId = operatorId,
             NewStateJson = state is null ? null : JsonSerializer.Serialize(state, state.GetType()), Description = description
         });
+
+    private static string? ValidateTitle(BookTitleInput input)
+    {
+        if (string.IsNullOrWhiteSpace(input.Title)) return "Kitap adı zorunludur.";
+        if (string.IsNullOrWhiteSpace(input.Authors)) return "Yazar bilgisi zorunludur.";
+        if (input.PublicationYear is < 0 or > 3000) return "Basım yılı geçerli değil.";
+        return null;
+    }
+
+    private static BookTitle CreateTitle(BookTitleInput input) => new()
+    {
+        Title = input.Title.Trim(), Authors = input.Authors.Trim(), Isbn = Clean(input.Isbn),
+        Publisher = Clean(input.Publisher), PublicationYear = input.PublicationYear,
+        Category = Clean(input.Category), Language = string.IsNullOrWhiteSpace(input.Language) ? "Türkçe" : input.Language.Trim(),
+        Description = Clean(input.Description)
+    };
 
     private static string? Clean(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

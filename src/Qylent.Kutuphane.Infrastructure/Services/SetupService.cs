@@ -52,7 +52,17 @@ public sealed class SetupService(IDbContextFactory<LibraryDbContext> contextFact
             });
         }
 
-        db.Operators.Add(new Operator { Name = "Ortak Görevli" });
+        var initialOperator = new Operator
+        {
+            Name = request.OperatorMode == OperatorMode.Shared ? "Ortak Görevli" : request.InitialOperatorName!.Trim()
+        };
+        if (request.OperatorMode == OperatorMode.Pin)
+        {
+            var pin = PasswordHasher.Hash(request.InitialOperatorPin!);
+            initialOperator.PinHash = pin.Hash;
+            initialOperator.PinSalt = pin.Salt;
+        }
+        db.Operators.Add(initialOperator);
         foreach (var definition in CreateProfileFields(request.LibraryType)) db.MemberFieldDefinitions.Add(definition);
         db.AuditEntries.Add(new AuditEntry
         {
@@ -77,27 +87,22 @@ public sealed class SetupService(IDbContextFactory<LibraryDbContext> contextFact
         if (request.DefaultMaxActiveLoans is < 1 or > 100) return OperationResult.Fail("Aktif kitap sınırı 1 ile 100 arasında olmalıdır.");
         if (request.DefaultMaxRenewals is < 0 or > 20) return OperationResult.Fail("Uzatma sınırı 0 ile 20 arasında olmalıdır.");
         if (string.IsNullOrWhiteSpace(request.BackupDirectory)) return OperationResult.Fail("Yedekleme klasörü zorunludur.");
+        if (request.OperatorMode != OperatorMode.Shared && string.IsNullOrWhiteSpace(request.InitialOperatorName))
+            return OperationResult.Fail("İsim seçimi veya PIN modu için ilk görevli adı zorunludur.");
+        if (request.OperatorMode == OperatorMode.Pin && (request.InitialOperatorPin is null || request.InitialOperatorPin.Length < 4 || request.InitialOperatorPin.Any(x => !char.IsDigit(x))))
+            return OperationResult.Fail("İlk görevli PIN'i en az dört rakam olmalıdır.");
         return OperationResult.Ok();
     }
 
-    private static IEnumerable<MemberFieldDefinition> CreateProfileFields(LibraryType type)
-    {
-        if (type == LibraryType.School)
+    private static IEnumerable<MemberFieldDefinition> CreateProfileFields(LibraryType type) =>
+        LibraryProfileRules.Fields(type).Select((field, index) => new MemberFieldDefinition
         {
-            yield return new() { Name = "Sınıf", FieldType = MemberFieldType.Text, DisplayOrder = 10, IsEnabled = true };
-            yield return new() { Name = "Veli adı", FieldType = MemberFieldType.Text, DisplayOrder = 20, IsSensitive = true, IsEnabled = true };
-            yield return new() { Name = "Veli telefonu", FieldType = MemberFieldType.Text, DisplayOrder = 30, IsSensitive = true, IsEnabled = true };
-        }
-        else if (type == LibraryType.Public)
-        {
-            yield return new() { Name = "Doğum tarihi", FieldType = MemberFieldType.Date, DisplayOrder = 10, IsSensitive = true, IsEnabled = true };
-            yield return new() { Name = "Üyelik türü", FieldType = MemberFieldType.Choice, ChoiceOptionsJson = "[\"Standart\",\"Çocuk\",\"Öğrenci\"]", DisplayOrder = 20, IsEnabled = true };
-        }
-        else if (type == LibraryType.PrivateInstitution)
-        {
-            yield return new() { Name = "Birim", FieldType = MemberFieldType.Text, DisplayOrder = 10, IsEnabled = true };
-            yield return new() { Name = "Sicil numarası", FieldType = MemberFieldType.Text, DisplayOrder = 20, IsSensitive = true, IsEnabled = true };
-        }
-    }
+            Name = field.Name,
+            FieldType = field.FieldType,
+            IsSensitive = field.IsSensitive,
+            ChoiceOptionsJson = field.ChoiceOptionsJson,
+            ProfileKey = field.Key,
+            DisplayOrder = (index + 1) * 10,
+            IsEnabled = true
+        });
 }
-

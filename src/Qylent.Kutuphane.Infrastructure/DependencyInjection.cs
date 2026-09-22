@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton<IBackupService, BackupService>();
         services.AddSingleton<AutomaticBackupCoordinator>();
         services.AddSingleton<IAdministrationService, AdministrationService>();
+        services.AddSingleton<IOperatorSessionService, OperatorSessionService>();
         return services;
     }
 }

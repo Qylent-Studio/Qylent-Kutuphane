@@ -32,6 +32,12 @@ internal static class Program
         await RunAsync("Kitap ve üye düzenleme / ilişkisiz silme", CatalogAndMemberManagementAsync);
         await RunAsync("Geçmişli kayıtları silmeyip arşivleme", HistoricalRecordsAreArchivedAsync);
         await RunAsync("Ayarlar ve rapor şablonu yönetimi", SettingsAndReportPresetsAsync);
+        await RunAsync("Ortak, isim seçimi ve PIN görevli girişleri", OperatorLoginModesAsync);
+        await RunAsync("Dolaşım işlemlerinde görevli sahipliği", OperatorOwnershipAsync);
+        await RunAsync("Atomik kitap ve zorunlu barkod kaydı", AtomicBookCreationAsync);
+        await RunAsync("Üye ve yönetim kayıtlarında tam CRUD", AdministrationCrudAsync);
+        await RunAsync("Dört kurum profili için hazır alanlar", InstitutionProfileSetupAsync);
+        await RunAsync("Kurum profili geçişi, veri koruma ve tema kalıcılığı", InstitutionProfileTransitionAsync);
         Console.WriteLine($"Sonuç: {_passed} başarılı, {_failed} başarısız.");
         return _failed == 0 ? 0 : 1;
     }
@@ -148,7 +154,8 @@ internal static class Program
             var result = await setup.CompleteSetupAsync(new SetupRequest(
                 "Deneme Kütüphanesi", null, LibraryType.School, OperatorMode.NameSelection,
                 14, 5, 1, paths.DefaultBackupDirectory, "GuvenliSifre42!",
-                [new("İlk okulunuz?", "Deneme"), new("En sevdiğiniz kitap?", "Kitap"), new("Doğduğunuz şehir?", "Ankara")]));
+                [new("İlk okulunuz?", "Deneme"), new("En sevdiğiniz kitap?", "Kitap"), new("Doğduğunuz şehir?", "Ankara")],
+                "Kurulum Görevlisi"));
             Require(result.Success, result.Message);
             Require(await setup.IsSetupCompletedAsync(), "Kurulum tamamlandı olarak görünmedi.");
             var login = await provider.GetRequiredService<ISecurityService>().LoginAdminAsync("GuvenliSifre42!");
@@ -341,6 +348,7 @@ internal static class Program
         {
             await CompleteSetupAsync(provider, maxLoans: 5);
             var administration = provider.GetRequiredService<IAdministrationService>();
+            Require((await administration.AddOperatorAsync(new("PIN Görevlisi", "9876"))).Success, "PIN ayarı için görevli eklenemedi.");
             var backupDirectory = Path.Combine(provider.GetRequiredService<AppPaths>().DataDirectory, "OzelYedekler");
             var settings = await administration.UpdateLibrarySettingsAsync(new(
                 "Yeni Kütüphane Adı", "logo.png", LibraryType.Public, OperatorMode.Pin, 21, 8, 2, backupDirectory));
@@ -359,11 +367,171 @@ internal static class Program
         });
     }
 
-    private static async Task CompleteSetupAsync(ServiceProvider provider, int maxLoans)
+    private static async Task OperatorLoginModesAsync()
+    {
+        await WithServicesAsync(async provider =>
+        {
+            await CompleteSetupAsync(provider, maxLoans: 5);
+            var sessions = provider.GetRequiredService<IOperatorSessionService>();
+            var shared = await sessions.LoginAsync(null, null);
+            Require(shared.Success && shared.Value is { OperatorId: null, DisplayName: "Ortak Görevli" }, "Ortak görevli girişi başarısız.");
+
+            var administration = provider.GetRequiredService<IAdministrationService>();
+            Require((await administration.AddOperatorAsync(new("Ayşe Görevli", "2468"))).Success, "Görevli eklenemedi.");
+            var operatorId = (await administration.GetOperatorsAsync()).Single(x => x.Name == "Ayşe Görevli").Id;
+            var paths = provider.GetRequiredService<AppPaths>();
+            Require((await administration.UpdateLibrarySettingsAsync(new(
+                "Test Kütüphanesi", null, LibraryType.School, OperatorMode.NameSelection,
+                14, 5, 1, paths.DefaultBackupDirectory))).Success, "İsim seçimi modu kaydedilemedi.");
+            var byName = await sessions.LoginAsync(operatorId, null);
+            Require(byName.Success && byName.Value?.DisplayName == "Ayşe Görevli", "İsim seçimi girişi başarısız.");
+
+            Require((await administration.UpdateLibrarySettingsAsync(new(
+                "Test Kütüphanesi", null, LibraryType.School, OperatorMode.Pin,
+                14, 5, 1, paths.DefaultBackupDirectory))).Success, "PIN modu kaydedilemedi.");
+            Require(!(await sessions.LoginAsync(operatorId, "0000")).Success, "Hatalı PIN kabul edildi.");
+            var byPin = await sessions.LoginAsync(operatorId, "2468");
+            Require(byPin.Success && byPin.Value?.OperatorId == operatorId, "Doğru PIN ile giriş yapılamadı.");
+        });
+    }
+
+    private static async Task AdministrationCrudAsync()
+    {
+        await WithServicesAsync(async provider =>
+        {
+            await CompleteSetupAsync(provider, maxLoans: 5);
+            var administration = provider.GetRequiredService<IAdministrationService>();
+
+            Require((await administration.AddLoanRuleAsync(new("Geçici kural", "Öğrenci", null, 10, 2, 0, 50))).Success, "Kural eklenemedi.");
+            var rule = (await administration.GetLoanRulesAsync()).Single();
+            Require((await administration.UpdateLoanRuleAsync(rule.Id, new("Güncel kural", "Öğrenci", "Roman", 21, 4, 2, 60))).Success, "Kural güncellenemedi.");
+            Require((await administration.SetLoanRuleActiveAsync(rule.Id, false)).Success && !(await administration.GetLoanRulesAsync()).Single().IsActive, "Kural devre dışı bırakılamadı.");
+            Require((await administration.DeleteLoanRuleAsync(rule.Id)).Success && (await administration.GetLoanRulesAsync()).Count == 0, "Kural silinemedi.");
+
+            Require((await administration.AddOperatorAsync(new("Geçici Görevli", "1234"))).Success, "Görevli eklenemedi.");
+            var operatorItem = (await administration.GetOperatorsAsync()).Single(x => x.Name == "Geçici Görevli");
+            Require((await administration.UpdateOperatorAsync(operatorItem.Id, new("Güncel Görevli", "5678"))).Success, "Görevli güncellenemedi.");
+            var paths = provider.GetRequiredService<AppPaths>();
+            Require((await administration.UpdateLibrarySettingsAsync(new("Test Kütüphanesi", null, LibraryType.School, OperatorMode.Pin, 14, 5, 1, paths.DefaultBackupDirectory))).Success, "PIN modu ayarlanamadı.");
+            Require(!(await administration.SetOperatorActiveAsync(operatorItem.Id, false)).Success, "PIN modundaki son PIN'li görevli devre dışı bırakıldı.");
+            Require((await administration.UpdateLibrarySettingsAsync(new("Test Kütüphanesi", null, LibraryType.School, OperatorMode.Shared, 14, 5, 1, paths.DefaultBackupDirectory))).Success, "Ortak moda dönülemedi.");
+            Require((await administration.SetOperatorActiveAsync(operatorItem.Id, false)).Success, "Görevli devre dışı bırakılamadı.");
+            Require((await administration.DeleteOperatorAsync(operatorItem.Id)).Success, "İlişkisiz görevli silinemedi.");
+
+            Require((await administration.AddMemberFieldAsync(new("Takma ad", MemberFieldType.Text, false, true, null))).Success, "Üye alanı eklenemedi.");
+            var field = (await administration.GetMemberFieldsAsync()).Single(x => x.Name == "Takma ad");
+            Require((await administration.UpdateMemberFieldAsync(field.Id, new("Kısa ad", MemberFieldType.Text, false, true, null))).Success, "Üye alanı güncellenemedi.");
+            Require((await administration.SetMemberFieldEnabledAsync(field.Id, false)).Success, "Üye alanı devre dışı bırakılamadı.");
+            Require((await administration.SetMemberFieldEnabledAsync(field.Id, true)).Success, "Üye alanı etkinleştirilemedi.");
+
+            var members = provider.GetRequiredService<IMemberService>();
+            var member = (await members.AddAsync(new("CRUD-1", "CRUD Üyesi", "Genel", "A", "555", "uye@example.test", "Adres", new Dictionary<Guid, string?> { [field.Id] = "Gizli" }), "Test")).Value!;
+            var details = await members.GetAsync(member.Id);
+            Require(details is not null && details.Phone == "555" && details.CustomFields[field.Id] == "Gizli", "Üye ayrıntıları çözülemedi.");
+            Require(!(await administration.UpdateMemberFieldAsync(field.Id, new("Kısa ad", MemberFieldType.Number, false, true, null))).Success, "Değeri bulunan alanın türü değiştirildi.");
+            Require(!(await administration.DeleteMemberFieldAsync(field.Id)).Success, "Değeri bulunan üye alanı silindi.");
+            Require((await members.DeleteAsync(member.Id, "Test")).Success, "İlişkisiz üye silinemedi.");
+            Require((await administration.DeleteMemberFieldAsync(field.Id)).Success, "Kullanılmayan üye alanı silinemedi.");
+        });
+    }
+
+    private static async Task OperatorOwnershipAsync()
+    {
+        await WithServicesAsync(async provider =>
+        {
+            await CompleteSetupAsync(provider, maxLoans: 5);
+            var administration = provider.GetRequiredService<IAdministrationService>();
+            Require((await administration.AddOperatorAsync(new("Mehmet Görevli", "1357"))).Success, "Görevli eklenemedi.");
+            var operatorId = (await administration.GetOperatorsAsync()).Single(x => x.Name == "Mehmet Görevli").Id;
+            var members = provider.GetRequiredService<IMemberService>();
+            Require((await members.AddAsync(new("OP-1", "İşlem Üyesi", "Genel", null, null, null, null), "Test")).Success, "Üye eklenemedi.");
+            var catalog = provider.GetRequiredService<ICatalogService>();
+            var first = await catalog.AddTitleWithFirstCopyAsync(new("Görevli Kitabı", "Yazar", null, null, null, "Genel", "Türkçe", null), "OP-B1", null, "Test");
+            var second = await catalog.AddTitleWithFirstCopyAsync(new("Ayırtma Kitabı", "Yazar", null, null, null, "Genel", "Türkçe", null), "OP-B2", null, "Test");
+            Require(first.Success && second.Success && second.Value is not null, "Test kitapları eklenemedi.");
+
+            var circulation = provider.GetRequiredService<ICirculationService>();
+            var loan = await circulation.CheckoutAsync(new("OP-1", "OP-B1", operatorId));
+            Require(loan.Success && loan.Value is not null, loan.Message);
+            Require((await circulation.RenewAsync(loan.Value!.LoanId, operatorId)).Success, "Uzatma görevliye bağlanamadı.");
+            Require((await circulation.ReserveAsync(new("OP-1", second.Value!.BookTitleId, operatorId))).Success, "Ayırtma görevliye bağlanamadı.");
+            Require((await circulation.ReturnAsync(new("OP-B1", operatorId))).Success, "İade görevliye bağlanamadı.");
+
+            var factory = provider.GetRequiredService<Microsoft.EntityFrameworkCore.IDbContextFactory<LibraryDbContext>>();
+            await using var db = await factory.CreateDbContextAsync();
+            var storedLoan = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.SingleAsync(db.Loans.Where(x => x.Id == loan.Value.LoanId));
+            Require(storedLoan.OperatorId == operatorId, "Ödünç kaydında görevli kimliği saklanmadı.");
+            var activities = new[] { ActivityType.Loaned, ActivityType.Renewed, ActivityType.Reserved, ActivityType.Returned };
+            var audits = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync(db.AuditEntries.Where(x => activities.Contains(x.ActivityType)));
+            Require(activities.All(activity => audits.Any(x => x.ActivityType == activity && x.OperatorId == operatorId && x.ActorName == "Mehmet Görevli")), "Tüm dolaşım işlemleri aktif görevliye bağlanmadı.");
+        });
+    }
+
+    private static async Task AtomicBookCreationAsync()
+    {
+        await WithServicesAsync(async provider =>
+        {
+            await CompleteSetupAsync(provider, maxLoans: 5);
+            var catalog = provider.GetRequiredService<ICatalogService>();
+            var first = await catalog.AddTitleWithFirstCopyAsync(new("İlk Kitap", "Yazar", null, null, null, null, "Türkçe", null), "AT-1", "A-1", "Test");
+            Require(first.Success, first.Message);
+            var duplicate = await catalog.AddTitleWithFirstCopyAsync(new("Kısmi Kalmamalı", "Yazar", null, null, null, null, "Türkçe", null), "AT-1", null, "Test");
+            Require(!duplicate.Success, "Yinelenen barkodla atomik kayıt kabul edildi.");
+            Require((await catalog.SearchAsync("Kısmi Kalmamalı", true)).Count == 0, "Barkod hatasından sonra kısmi kitap başlığı kaldı.");
+            var missing = await catalog.AddTitleWithFirstCopyAsync(new("Barkodsuz Kalmamalı", "Yazar", null, null, null, null, "Türkçe", null), "", null, "Test");
+            Require(!missing.Success, "Barkodsuz kitap kabul edildi.");
+            Require((await catalog.SearchAsync("Barkodsuz Kalmamalı", true)).Count == 0, "Zorunlu barkod hatasından sonra kısmi kitap başlığı kaldı.");
+        });
+    }
+
+    private static async Task InstitutionProfileSetupAsync()
+    {
+        foreach (var type in Enum.GetValues<LibraryType>())
+        {
+            await WithServicesAsync(async provider =>
+            {
+                await CompleteSetupAsync(provider, 5, type);
+                var fields = await provider.GetRequiredService<IAdministrationService>().GetMemberFieldsAsync();
+                var expectedKeys = LibraryProfileRules.Fields(type).Select(x => x.Key).OrderBy(x => x).ToArray();
+                var actualKeys = fields.Where(x => x.IsEnabled && x.ProfileKey is not null).Select(x => x.ProfileKey!).OrderBy(x => x).ToArray();
+                Require(actualKeys.SequenceEqual(expectedKeys), $"{LibraryProfileRules.DisplayName(type)} hazır alanları doğru oluşmadı.");
+                Require(fields.All(x => x.Name is not "Sınıf" and not "Birim"), "Sınıf / birim alanı yinelenen hazır alan olarak oluşturuldu.");
+            });
+        }
+    }
+
+    private static async Task InstitutionProfileTransitionAsync()
+    {
+        await WithServicesAsync(async provider =>
+        {
+            await CompleteSetupAsync(provider, 5, LibraryType.School);
+            var members = provider.GetRequiredService<IMemberService>();
+            var member = (await members.AddAsync(new("PR-1", "Profil Üyesi", "Genel", "9-A", null, null, null), "Test")).Value!;
+            var administration = provider.GetRequiredService<IAdministrationService>();
+            var paths = provider.GetRequiredService<AppPaths>();
+
+            foreach (var target in new[] { LibraryType.Public, LibraryType.PrivateInstitution, LibraryType.General, LibraryType.School })
+            {
+                var result = await administration.UpdateLibrarySettingsAsync(new(
+                    "Test Kütüphanesi", null, target, OperatorMode.Shared, 14, 5, 1, paths.DefaultBackupDirectory, ThemePreference.Dark));
+                Require(result.Success, result.Message);
+                var fields = await administration.GetMemberFieldsAsync();
+                var expectedKeys = LibraryProfileRules.Fields(target).Select(x => x.Key).OrderBy(x => x).ToArray();
+                var activeKeys = fields.Where(x => x.IsEnabled && x.ProfileKey is not null).Select(x => x.ProfileKey!).OrderBy(x => x).ToArray();
+                Require(activeKeys.SequenceEqual(expectedKeys), $"{LibraryProfileRules.DisplayName(target)} geçişinde hazır alanlar uyarlanmadı.");
+                Require((await members.GetAsync(member.Id))?.ClassOrUnit == "9-A", "Kurum türü geçişinde sınıf / birim verisi kayboldu.");
+            }
+
+            var profile = await administration.GetLibraryProfileAsync();
+            Require(profile?.ThemePreference == ThemePreference.Dark, "Tema tercihi kalıcı olmadı.");
+        });
+    }
+
+    private static async Task CompleteSetupAsync(ServiceProvider provider, int maxLoans, LibraryType libraryType = LibraryType.School)
     {
         var paths = provider.GetRequiredService<AppPaths>();
         var result = await provider.GetRequiredService<ISetupService>().CompleteSetupAsync(new SetupRequest(
-            "Test Kütüphanesi", null, LibraryType.School, OperatorMode.Shared,
+            "Test Kütüphanesi", null, libraryType, OperatorMode.Shared,
             14, maxLoans, 1, paths.DefaultBackupDirectory, "GuvenliSifre42!",
             [new("Soru 1", "Cevap 1"), new("Soru 2", "Cevap 2"), new("Soru 3", "Cevap 3")]));
         Require(result.Success, result.Message);

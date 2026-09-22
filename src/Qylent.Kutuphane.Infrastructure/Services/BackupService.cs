@@ -67,13 +67,14 @@ public sealed class BackupService(AppPaths paths, IDbContextFactory<LibraryDbCon
                 using (var manifestStream = manifestEntry.Open())
                     manifest = await JsonSerializer.DeserializeAsync<BackupManifest>(manifestStream, cancellationToken: cancellationToken)
                         ?? throw new InvalidDataException("Yedek bildirimi okunamadı.");
-                if (manifest.SchemaVersion != 1) return OperationResult.Fail("Yedek sürümü bu uygulamayla uyumlu değil.");
+                if (manifest.SchemaVersion is < 1 or > DatabaseInitializer.CurrentSchemaVersion) return OperationResult.Fail("Yedek sürümü bu uygulamayla uyumlu değil.");
                 var databaseEntry = archive.GetEntry("kutuphane.db") ?? throw new InvalidDataException("Yedek veritabanı eksik.");
                 var restoreDb = Path.Combine(tempRoot, "kutuphane.db");
                 await using (var input = databaseEntry.Open())
                 await using (var output = File.Create(restoreDb)) await input.CopyToAsync(output, cancellationToken);
                 if (!Convert.ToHexString(SHA256.HashData(await File.ReadAllBytesAsync(restoreDb, cancellationToken))).Equals(manifest.DatabaseSha256, StringComparison.OrdinalIgnoreCase))
                     return OperationResult.Fail("Yedek bütünlük doğrulamasını geçemedi.");
+                await UpgradeRestoredDatabaseAsync(restoreDb, cancellationToken);
                 await ValidateDatabaseAsync(restoreDb, cancellationToken);
                 var keyEntry = archive.GetEntry("sensitive-fields.key");
                 if (keyEntry is not null)
@@ -147,7 +148,7 @@ public sealed class BackupService(AppPaths paths, IDbContextFactory<LibraryDbCon
                 var keyEntry = archive.CreateEntry("sensitive-fields.key", CompressionLevel.Optimal);
                 using var output = keyEntry.Open(); output.Write(File.ReadAllBytes(paths.KeyPath));
             }
-            var manifest = new BackupManifest(1, DateTimeOffset.UtcNow, Convert.ToHexString(SHA256.HashData(database)));
+            var manifest = new BackupManifest(DatabaseInitializer.CurrentSchemaVersion, DateTimeOffset.UtcNow, Convert.ToHexString(SHA256.HashData(database)));
             var manifestEntry = archive.CreateEntry("manifest.json", CompressionLevel.Optimal);
             using var manifestOutput = manifestEntry.Open();
             JsonSerializer.Serialize(manifestOutput, manifest);
@@ -179,7 +180,42 @@ public sealed class BackupService(AppPaths paths, IDbContextFactory<LibraryDbCon
         await using var integrity = connection.CreateCommand(); integrity.CommandText = "PRAGMA integrity_check;";
         if (!string.Equals((string?)await integrity.ExecuteScalarAsync(cancellationToken), "ok", StringComparison.OrdinalIgnoreCase)) throw new InvalidDataException("Veritabanı bütünlük denetimi başarısız.");
         await using var schema = connection.CreateCommand(); schema.CommandText = "SELECT Version FROM SchemaInfo WHERE Id=1;";
-        if (Convert.ToInt32(await schema.ExecuteScalarAsync(cancellationToken)) != 1) throw new InvalidDataException("Veritabanı sürümü uyumsuz.");
+        if (Convert.ToInt32(await schema.ExecuteScalarAsync(cancellationToken)) != DatabaseInitializer.CurrentSchemaVersion) throw new InvalidDataException("Veritabanı sürümü uyumsuz.");
+    }
+
+    private static async Task UpgradeRestoredDatabaseAsync(string path, CancellationToken cancellationToken)
+    {
+        await using var connection = new SqliteConnection($"Data Source={path};Pooling=False");
+        await connection.OpenAsync(cancellationToken);
+        await using var readVersion = connection.CreateCommand();
+        readVersion.CommandText = "SELECT Version FROM SchemaInfo WHERE Id=1;";
+        var version = Convert.ToInt32(await readVersion.ExecuteScalarAsync(cancellationToken));
+        if (version == DatabaseInitializer.CurrentSchemaVersion) return;
+        if (version != 1) throw new InvalidDataException("Veritabanı sürümü uyumsuz.");
+
+        await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+        foreach (var sql in new[]
+        {
+            "ALTER TABLE LibraryProfiles ADD COLUMN ThemePreference INTEGER NOT NULL DEFAULT 2;",
+            "ALTER TABLE MemberFieldDefinitions ADD COLUMN ProfileKey TEXT NULL;",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.core.class' WHERE Name = 'Sınıf';",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.core.unit' WHERE Name = 'Birim';",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.school.guardian-name' WHERE Name = 'Veli adı';",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.school.guardian-phone' WHERE Name = 'Veli telefonu';",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.public.birth-date' WHERE Name = 'Doğum tarihi';",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.public.membership-type' WHERE Name = 'Üyelik türü';",
+            "UPDATE MemberFieldDefinitions SET ProfileKey = 'profile.private.employee-number' WHERE Name = 'Sicil numarası';",
+            "UPDATE Members SET ClassOrUnit = COALESCE(NULLIF(ClassOrUnit, ''), (SELECT MemberFieldValues.Value FROM MemberFieldValues JOIN MemberFieldDefinitions ON MemberFieldDefinitions.Id = MemberFieldValues.DefinitionId WHERE MemberFieldValues.MemberId = Members.Id AND MemberFieldDefinitions.ProfileKey IN ('profile.core.class', 'profile.core.unit') AND MemberFieldValues.Value IS NOT NULL AND MemberFieldValues.Value != '' LIMIT 1));",
+            "UPDATE MemberFieldDefinitions SET IsEnabled = 0 WHERE ProfileKey IN ('profile.core.class', 'profile.core.unit');",
+            $"UPDATE SchemaInfo SET Version = {DatabaseInitializer.CurrentSchemaVersion}, AppliedAtUtc = {DateTimeOffset.UtcNow.UtcTicks} WHERE Id = 1;"
+        })
+        {
+            await using var command = connection.CreateCommand();
+            command.Transaction = (SqliteTransaction)transaction;
+            command.CommandText = sql;
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+        await transaction.CommitAsync(cancellationToken);
     }
 
     private async Task RecordAsync(string path, bool automatic, long size, string sha, bool success, CancellationToken cancellationToken)

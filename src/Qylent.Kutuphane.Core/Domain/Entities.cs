@@ -12,6 +12,7 @@ public sealed class LibraryProfile : EntityBase
     public string Name { get; set; } = "Qylent Kütüphane";
     public string? LogoPath { get; set; }
     public LibraryType LibraryType { get; set; } = LibraryType.General;
+    public ThemePreference ThemePreference { get; set; } = ThemePreference.System;
     public OperatorMode OperatorMode { get; set; } = OperatorMode.Shared;
     public int DefaultLoanDays { get; set; } = 14;
     public int DefaultMaxActiveLoans { get; set; } = 5;
@@ -71,6 +72,7 @@ public sealed class MemberFieldDefinition : EntityBase
     public bool IsEnabled { get; set; } = true;
     public int DisplayOrder { get; set; }
     public string? ChoiceOptionsJson { get; set; }
+    public string? ProfileKey { get; set; }
     public List<MemberFieldValue> Values { get; set; } = [];
 }
 
@@ -184,4 +186,3 @@ public sealed class SchemaInfo
     public int Version { get; set; } = 1;
     public DateTimeOffset AppliedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }
-
